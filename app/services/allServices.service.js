@@ -29,7 +29,7 @@ var AllServicesService = (function () {
         this.imageUrl = 'https://www.googleapis.com/customsearch/v1?key=AIzaSyDnOT53CCV948mcKY6rawsUNAAZqOoRKFU&cx=002168208795225832214:dup1kwhfope&searchType=image&imgSize=medium&q=';
         this.searchResultsAndURL = 'api/s_and?term=';
         this.searchResultsOrURL = 'api/s_or?term=';
-        this.visUrl = '/api/states';
+        this.visUrl = '';
     }
     AllServicesService.prototype.getAllStates = function () {
         return this.http.get(this.statesUrl)
