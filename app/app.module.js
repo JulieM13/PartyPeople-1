@@ -27,6 +27,7 @@ var election_details_component_1 = require('./components/election_details/electi
 var parties_table_component_1 = require('./components/parties_table/parties_table.component');
 var party_details_component_1 = require('./components/party_details/party_details.component');
 var search_results_table_component_1 = require('./components/search_results_table/search_results_table.component');
+var vis_table_component_1 = require('./components/vis_table/vis_table.component');
 var AppModule = (function () {
     function AppModule() {
     }
@@ -78,6 +79,10 @@ var AppModule = (function () {
                         component: search_results_table_component_1.SearchResultsTableComponent
                     },
                     {
+                        path: 'vis',
+                        component: vis_table_component_1.VisTableComponent
+                    },
+                    {
                         path: '',
                         component: home_component_1.HomeComponent
                     },
@@ -101,7 +106,8 @@ var AppModule = (function () {
                 party_details_component_1.PartyDetailsComponent,
                 state_details_component_1.StateDetailsComponent,
                 not_found_component_1.PageNotFoundComponent,
-                search_results_table_component_1.SearchResultsTableComponent
+                search_results_table_component_1.SearchResultsTableComponent,
+                vis_table_component_1.VisTableComponent
             ],
             bootstrap: [app_component_1.AppComponent]
         }), 

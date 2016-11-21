@@ -19,6 +19,7 @@ export class AllServicesService {
 	private imageUrl = 'https://www.googleapis.com/customsearch/v1?key=AIzaSyDnOT53CCV948mcKY6rawsUNAAZqOoRKFU&cx=002168208795225832214:dup1kwhfope&searchType=image&imgSize=medium&q=';
 	private searchResultsAndURL = 'api/s_and?term=';
 	private searchResultsOrURL = 'api/s_or?term=';
+	private visUrl = '/api/states';
 
 	constructor(private http: Http) {}
 
@@ -105,6 +106,12 @@ export class AllServicesService {
 						   .map(this.extractData)
 						   .catch(this.handleError);
 		}
+	}
+
+	getVis(): Observable<any> {
+		return this.http.get(this.visUrl)
+				   .map(this.extractData)
+				   .catch(this.handleError);
 	}
 
 

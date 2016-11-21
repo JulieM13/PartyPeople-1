@@ -26,6 +26,7 @@
       // other libraries
       'rxjs':                      'npm:rxjs',
       'angular-in-memory-web-api': 'npm:angular-in-memory-web-api',
+      'd3': 'npm:d3',
     },
     // packages tells the System loader how to load when no filename and/or no extension
     packages: {
@@ -40,7 +41,10 @@
         main: './index.js',
         defaultExtension: 'js'
       },
-      'primeng': { defaultExtension: 'js' }
+      'primeng': { defaultExtension: 'js' },
+      'd3': { 
+        main: './d3.js',
+        defaultExtension: 'js' }
     }
   });
 })(this);

@@ -24,6 +24,8 @@ import { PartyDetailsComponent } from './components/party_details/party_details.
 
 import { SearchResultsTableComponent } from './components/search_results_table/search_results_table.component';
 
+import { VisTableComponent } from './components/vis_table/vis_table.component';
+
 @NgModule({
   imports: [
     DataTableModule,
@@ -70,6 +72,10 @@ import { SearchResultsTableComponent } from './components/search_results_table/s
         path: 'search',
         component: SearchResultsTableComponent
       },
+      {
+        path: 'vis',
+        component: VisTableComponent
+      },
   		{
         path: '',
         component: HomeComponent
@@ -96,7 +102,8 @@ import { SearchResultsTableComponent } from './components/search_results_table/s
     PartyDetailsComponent,
     StateDetailsComponent,
     PageNotFoundComponent,
-    SearchResultsTableComponent
+    SearchResultsTableComponent,
+    VisTableComponent
   ],
   bootstrap: [ AppComponent ]
 })
