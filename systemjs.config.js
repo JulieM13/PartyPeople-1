@@ -27,6 +27,8 @@
       'rxjs':                      'npm:rxjs',
       'angular-in-memory-web-api': 'npm:angular-in-memory-web-api',
       'd3': 'npm:d3',
+      'nvd3': 'npm:nvd3',
+      'ng2-nvd3': 'npm:ng2-nvd3'
     },
     // packages tells the System loader how to load when no filename and/or no extension
     packages: {
@@ -44,6 +46,12 @@
       'primeng': { defaultExtension: 'js' },
       'd3': { 
         main: './d3.js',
+        defaultExtension: 'js' },
+      'nvd3': { 
+        main: './build/nv.d3.min.js',
+        defaultExtension: 'js' },
+      'ng2-nvd3': { 
+        main: './build/lib/ng2-nvd3.js',
         defaultExtension: 'js' }
     }
   });

@@ -28,6 +28,7 @@ var parties_table_component_1 = require('./components/parties_table/parties_tabl
 var party_details_component_1 = require('./components/party_details/party_details.component');
 var search_results_table_component_1 = require('./components/search_results_table/search_results_table.component');
 var vis_table_component_1 = require('./components/vis_table/vis_table.component');
+var ng2_nvd3_1 = require('ng2-nvd3');
 var AppModule = (function () {
     function AppModule() {
     }
@@ -107,7 +108,8 @@ var AppModule = (function () {
                 state_details_component_1.StateDetailsComponent,
                 not_found_component_1.PageNotFoundComponent,
                 search_results_table_component_1.SearchResultsTableComponent,
-                vis_table_component_1.VisTableComponent
+                vis_table_component_1.VisTableComponent,
+                ng2_nvd3_1.nvD3
             ],
             bootstrap: [app_component_1.AppComponent]
         }), 

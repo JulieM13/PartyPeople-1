@@ -25,6 +25,7 @@ import { PartyDetailsComponent } from './components/party_details/party_details.
 import { SearchResultsTableComponent } from './components/search_results_table/search_results_table.component';
 
 import { VisTableComponent } from './components/vis_table/vis_table.component';
+import {nvD3} from 'ng2-nvd3';
 
 @NgModule({
   imports: [
@@ -103,7 +104,8 @@ import { VisTableComponent } from './components/vis_table/vis_table.component';
     StateDetailsComponent,
     PageNotFoundComponent,
     SearchResultsTableComponent,
-    VisTableComponent
+    VisTableComponent,
+    nvD3
   ],
   bootstrap: [ AppComponent ]
 })
