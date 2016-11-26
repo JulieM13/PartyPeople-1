@@ -13,6 +13,7 @@ var allServices_service_1 = require('../../services/allServices.service');
 var D3 = require('d3');
 var VisTableComponent = (function () {
     function VisTableComponent(allServicesService) {
+        var _this = this;
         this.allServicesService = allServicesService;
         this.title = "Visualization";
         this.loading = true;
@@ -37,79 +38,149 @@ var VisTableComponent = (function () {
             .attr("height", this.height + this.margin.top + this.margin.bottom)
             .append("g")
             .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
+        this.updateJson = function (error, root) {
+            if (error)
+                throw error;
+            console.log(root);
+            console.log(_this.title);
+            _this.partition.nodes(root);
+            _this.x.domain([0, root.value]).nice();
+            _this.down(root, 0);
+        };
     }
     VisTableComponent.prototype.ngOnInit = function () {
-        // this.getVis();
+        //this.getVis();
         this.svg.append("rect")
             .attr("class", "background")
             .attr("width", this.width)
-            .attr("height", this.height)
-            .on("click", this.up);
+            .attr("height", this.height);
         this.svg.append("g")
-            .attr("class", "x axis");
+            .attr("class", "x-axis");
         this.svg.append("g")
-            .attr("class", "y axis")
+            .attr("class", "y-axis")
             .append("line")
             .attr("y1", "100%");
-        D3.json("static/readme.json", function (error, root) {
-            if (error)
-                throw error;
-            this.partition.nodes(root);
-            this.x.domain([0, root.value]).nice();
-            this.down(root, 0);
-        });
+        D3.json("/static/readme.json", this.updateJson);
+        this.loading = false;
+        //this.partition.nodes(this.data.value.children[0]);
     };
     VisTableComponent.prototype.down = function (d, i) {
-        if (!d.children || this.__transition__)
+        var _this = this;
+        if (!d.children || !this.svg)
             return;
-        end = this.duration + d.children.length * this.delay;
+        this.end = this.duration + d.children.length * this.delay;
         // Mark any currently-displayed bars as exiting.
-        exit = this.svg.selectAll(".enter")
+        this.exit = this.svg.selectAll(".enter")
             .attr("class", "exit");
+        var f;
+        f = function (p) {
+            return p === d;
+        };
         // Entering nodes immediately obscure the clicked-on bar, so hide it.
-        exit.selectAll("rect").filter(function (p) { return p === d; })
-            .style("fill-opacity", 1e-6);
+        this.exit.selectAll("rect").filter(f).style("fill-opacity", 1e-6);
         // Enter the new bars for the clicked-on data.
         // Per above, entering bars are immediately visible.
-        enter = this.bar(d)
+        this.enter = this.bar(d)
             .attr("transform", this.stack(i))
             .style("opacity", 1);
         // Have the text fade-in, even though the bars are visible.
         // Color the bars as parents; they will fade to children if appropriate.
-        enter.select("text").style("fill-opacity", 1e-6);
-        enter.select("rect").style("fill", this.color(true));
+        this.enter.select("text").style("fill-opacity", 1e-6);
+        this.enter.select("rect").style("fill", this.color("true"));
+        var max;
+        max = function (d) { return d.value; };
         // Update the x-scale domain.
-        this.x.domain([0, D3.max(d.children, function (d) { return d.value; })]).nice();
+        this.x.domain([0, D3.max(d.children, max)]).nice();
         // Update the x-axis.
         this.svg.selectAll(".x.axis").transition()
-            .duration(duration)
-            .call(xAxis);
-        // Transition entering bars to their new position.
-        enterTransition = enter.transition()
             .duration(this.duration)
-            .delay(function (d, i) { return i * this.delay; })
-            .attr("transform", function (d, i) { return "translate(0," + this.barHeight * i * 1.2 + ")"; });
+            .call(this.xAxis);
+        var trans;
+        var del;
+        del = function (d, i) { return i * _this.delay; };
+        trans = function (d, i) { return "translate(0," + _this.barHeight * i * 1.2 + ")"; };
+        // Transition entering bars to their new position.
+        this.enterTransition = this.enter.transition()
+            .duration(this.duration)
+            .delay(del)
+            .attr("transform", trans);
         // Transition entering text.
-        enterTransition.select("text")
+        this.enterTransition.select("text")
             .style("fill-opacity", 1);
+        var wid;
+        var fi;
+        wid = function (d) { return _this.x(d.value); };
+        fi = function (d) { return _this.color(d.children); };
         // Transition entering rects to the new x-scale.
-        enterTransition.select("rect")
-            .attr("width", function (d) { return this.x(d.value); })
-            .style("fill", function (d) { return this.color(!!d.children); });
+        this.enterTransition.select("rect")
+            .attr("width", wid)
+            .style("fill", fi);
         // Transition exiting bars to fade out.
-        exitTransition = exit.transition()
+        this.exitTransition = this.exit.transition()
             .duration(this.duration)
             .style("opacity", 1e-6)
             .remove();
+        var ex;
+        ex = function (d) { return _this.x(d.value); };
         // Transition exiting bars to the new x-scale.
-        exitTransition.selectAll("rect")
-            .attr("width", function (d) { return this.x(d.value); });
+        this.exitTransition.selectAll("rect")
+            .attr("width", ex);
         // Rebind the current node to the background.
         this.svg.select(".background")
             .datum(d)
             .transition()
-            .duration(end);
+            .duration(this.end);
         d.index = i;
+    };
+    // Creates a set of bars for the given data node, at the specified index.
+    VisTableComponent.prototype.bar = function (d) {
+        var _this = this;
+        this.b = this.svg.insert("g", ".y.axis")
+            .attr("class", "enter")
+            .attr("transform", "translate(0,5)")
+            .selectAll("g")
+            .data(d.children)
+            .enter().append("g")
+            .style("cursor", function (d) {
+            if (d.children != null) {
+                return null;
+            }
+            return "pointer";
+        })
+            .on("click", this.down);
+        this.b.append("text")
+            .attr("x", -6)
+            .attr("y", this.barHeight / 2)
+            .attr("dy", ".35em")
+            .style("text-anchor", "end")
+            .text(function (d) { return d.name; });
+        var re;
+        re = function (d) { return _this.x(d.value); };
+        this.b.append("rect")
+            .attr("width", re)
+            .attr("height", this.barHeight);
+        return this.b;
+    };
+    // A stateful closure for stacking bars horizontally.
+    VisTableComponent.prototype.stack = function (i) {
+        var _this = this;
+        this.x0 = 0;
+        var tra;
+        tra = function (d) {
+            _this.tx = "translate(" + _this.x0 + "," + _this.barHeight * i * 1.2 + ")";
+            _this.x0 += _this.x(d.value);
+            return _this.tx;
+        };
+        return tra;
+    };
+    VisTableComponent.prototype.getVis = function () {
+        var _this = this;
+        this.allServicesService.getVis().subscribe(function (res) {
+            _this.data = res;
+            _this.loading = false;
+            console.log(_this.data);
+        }, function (error) { return _this.errorMessage = error; });
+        console.log("Getting visualization data!");
     };
     VisTableComponent = __decorate([
         core_1.Component({
@@ -124,101 +195,4 @@ var VisTableComponent = (function () {
     return VisTableComponent;
 }());
 exports.VisTableComponent = VisTableComponent;
-// ********* CONVERT THE STUFF BELOW TO TYPESCRIPT ********** //
-function up(d) {
-    if (!d.parent || this.__transition__)
-        return;
-    var end = duration + d.children.length * delay;
-    // Mark any currently-displayed bars as exiting.
-    var exit = svg.selectAll(".enter")
-        .attr("class", "exit");
-    // Enter the new bars for the clicked-on data's parent.
-    var enter = bar(d.parent)
-        .attr("transform", function (d, i) { return "translate(0," + barHeight * i * 1.2 + ")"; })
-        .style("opacity", 1e-6);
-    // Color the bars as appropriate.
-    // Exiting nodes will obscure the parent bar, so hide it.
-    enter.select("rect")
-        .style("fill", function (d) { return color(!!d.children); })
-        .filter(function (p) { return p === d; })
-        .style("fill-opacity", 1e-6);
-    // Update the x-scale domain.
-    x.domain([0, d3.max(d.parent.children, function (d) { return d.value; })]).nice();
-    // Update the x-axis.
-    svg.selectAll(".x.axis").transition()
-        .duration(duration)
-        .call(xAxis);
-    // Transition entering bars to fade in over the full duration.
-    var enterTransition = enter.transition()
-        .duration(end)
-        .style("opacity", 1);
-    // Transition entering rects to the new x-scale.
-    // When the entering parent rect is done, make it visible!
-    enterTransition.select("rect")
-        .attr("width", function (d) { return x(d.value); })
-        .each("end", function (p) { if (p === d)
-        d3.select(this).style("fill-opacity", null); });
-    // Transition exiting bars to the parent's position.
-    var exitTransition = exit.selectAll("g").transition()
-        .duration(duration)
-        .delay(function (d, i) { return i * delay; })
-        .attr("transform", stack(d.index));
-    // Transition exiting text to fade out.
-    exitTransition.select("text")
-        .style("fill-opacity", 1e-6);
-    // Transition exiting rects to the new scale and fade to parent color.
-    exitTransition.select("rect")
-        .attr("width", function (d) { return x(d.value); })
-        .style("fill", color(true));
-    // Remove exiting nodes when the last child has finished transitioning.
-    exit.transition()
-        .duration(end)
-        .remove();
-    // Rebind the current parent to the background.
-    svg.select(".background")
-        .datum(d.parent)
-        .transition()
-        .duration(end);
-}
-// Creates a set of bars for the given data node, at the specified index.
-function bar(d) {
-    var bar = svg.insert("g", ".y.axis")
-        .attr("class", "enter")
-        .attr("transform", "translate(0,5)")
-        .selectAll("g")
-        .data(d.children)
-        .enter().append("g")
-        .style("cursor", function (d) { return !d.children ? null : "pointer"; })
-        .on("click", down);
-    bar.append("text")
-        .attr("x", -6)
-        .attr("y", barHeight / 2)
-        .attr("dy", ".35em")
-        .style("text-anchor", "end")
-        .text(function (d) { return d.name; });
-    bar.append("rect")
-        .attr("width", function (d) { return x(d.value); })
-        .attr("height", barHeight);
-    return bar;
-}
-// A stateful closure for stacking bars horizontally.
-function stack(i) {
-    var x0 = 0;
-    return function (d) {
-        var tx = "translate(" + x0 + "," + barHeight * i * 1.2 + ")";
-        x0 += x(d.value);
-        return tx;
-    };
-    // ********* CONVERT THE STUFF ABOVE TO TYPESCRIPT ********** //
-    getVis();
-    {
-        //this.allServicesService.getVis().subscribe(
-        //	res => {
-        //		this.data = res;
-        //		this.loading = false;
-        //	},
-        //	error => this.errorMessage = <any>error);
-        console.log("Getting visualization data!");
-    }
-}
 //# sourceMappingURL=vis_table.component.js.map

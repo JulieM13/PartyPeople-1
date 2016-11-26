@@ -19,7 +19,7 @@ export class AllServicesService {
 	private imageUrl = 'https://www.googleapis.com/customsearch/v1?key=AIzaSyDnOT53CCV948mcKY6rawsUNAAZqOoRKFU&cx=002168208795225832214:dup1kwhfope&searchType=image&imgSize=medium&q=';
 	private searchResultsAndURL = 'api/s_and?term=';
 	private searchResultsOrURL = 'api/s_or?term=';
-	private visUrl = '';
+	private visUrl = 'static/readme.json';
 
 	constructor(private http: Http) {}
 
