@@ -11,42 +11,42 @@ import * as D3 from 'd3';
 })
 
 export class VisTableComponent implements OnInit {
-	errorMessage: string;
-	title = "Visualization";
-	data: any[];
-	loading = true;
+	private errorMessage: string;
+	private title = "Visualization";
+	private data: any[];
+	private loading = true;
 
 	// D3 vars
-	margin = {top: 30, right: 120, bottom: 0, left: 120};
-    width = 960 - this.margin.left - this.margin.right;
-    height = 500 - this.margin.top - this.margin.bottom;
+	private margin = {top: 30, right: 120, bottom: 0, left: 120};
+    private width = 960 - this.margin.left - this.margin.right;
+    private height = 500 - this.margin.top - this.margin.bottom;
 
-    x = D3.scale.linear()
+    private x = D3.scale.linear()
     	.range([0, this.width]);
-	barHeight = 20;
-	color = D3.scale.ordinal()
+	private barHeight = 20;
+	private color = D3.scale.ordinal()
 		.range(["steelblue", "#ccc"]);
-	duration = 750;
-	delay = 25;
-	partition = D3.layout.partition()
+	private duration = 750;
+	private delay = 25;
+	private partition = D3.layout.partition()
 		.value(function(d: any) { return d.size; });
-	xAxis = D3.svg.axis()
+	private xAxis = D3.svg.axis()
 	    .scale(this.x)
 	    .orient("top");
-	svg = D3.select("body").append("svg")
+	private svg = D3.select("body").append("svg")
 	    .attr("width", this.width + this.margin.left + this.margin.right)
 	    .attr("height", this.height + this.margin.top + this.margin.bottom)
 	  	.append("g")
 	    .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
 
-	end: number;
-	exit: any;
-	enter: any;
-	enterTransition: any;
-	exitTransition: any;
-	b: any;
-	tx: any;
-	x0: number;
+	private end: number;
+	private exit: any;
+	private enter: any;
+	private enterTransition: any;
+	private exitTransition: any;
+	private b: any;
+	private tx: any;
+	private x0: number;
 
 
 
@@ -59,7 +59,8 @@ export class VisTableComponent implements OnInit {
 		this.svg.append("rect")
 		    .attr("class", "background")
 		    .attr("width", this.width)
-		    .attr("height", this.height);
+		    .attr("height", this.height)
+		    .on("click", this.up);
 
 		this.svg.append("g")
 		    .attr("class", "x-axis");
@@ -86,8 +87,8 @@ export class VisTableComponent implements OnInit {
 	}
 
 
-	down(d: any, i: any) {
-		if (!d.children || !this.svg) return;
+	public down = (d: any, i: any) => {
+		if (!d.children) return;
 		this.end = this.duration + d.children.length * this.delay;
 
 		// Mark any currently-displayed bars as exiting.
@@ -180,8 +181,106 @@ export class VisTableComponent implements OnInit {
 
 
 
+
+
+
+	public up = (d) => {
+	  if (!d.parent) return;
+	  this.end = this.duration + d.children.length * this.delay;
+
+	  // Mark any currently-displayed bars as exiting.
+	  this.exit = this.svg.selectAll(".enter")
+	      .attr("class", "exit");
+
+	  var tra;
+	  tra = (d, i) => { return "translate(0," + this.barHeight * i * 1.2 + ")"; }
+
+	  // Enter the new bars for the clicked-on data's parent.
+	  this.enter = this.bar(d.parent)
+	      .attr("transform", tra)
+	      .style("opacity", 1e-6);
+
+	  var fi;
+	  var filt;
+
+	  fi = (d) => { return this.color(d.children); }
+	  filt = (p) => { return p === d; }
+
+	  // Color the bars as appropriate.
+	  // Exiting nodes will obscure the parent bar, so hide it.
+	  this.enter.select("rect")
+	      .style("fill", fi)
+	    .filter(filt)
+	      .style("fill-opacity", 1e-6);
+
+	  var ma;
+	  ma = (d) => { return d.value; }
+
+	  // Update the x-scale domain.
+	  this.x.domain([0, D3.max(d.parent.children, ma)]).nice();
+
+	  // Update the x-axis.
+	  this.svg.selectAll(".x.axis").transition()
+	      .duration(this.duration)
+	      .call(this.xAxis);
+
+	  // Transition entering bars to fade in over the full duration.
+	  this.enterTransition = this.enter.transition()
+	      .duration(this.end)
+	      .style("opacity", 1);
+
+	  var wid;
+	  var en;
+
+	  wid = (d) => { return this.x(d.value); }
+	  en = (p) => { if (p === d) D3.select("svg").style("fill-opacity", null); }
+
+	  // Transition entering rects to the new x-scale.
+	  // When the entering parent rect is done, make it visible!
+	  this.enterTransition.select("rect")
+	      .attr("width", wid)
+	      .each("end", en);
+
+	  var del;
+
+	  del = (d, i) => { return i * this.delay; }
+
+	  // Transition exiting bars to the parent's position.
+	  this.exitTransition = this.exit.selectAll("g").transition()
+	      .duration(this.duration)
+	      .delay(del)
+	      .attr("transform", this.stack(d.index));
+
+	  // Transition exiting text to fade out.
+	  this.exitTransition.select("text")
+	      .style("fill-opacity", 1e-6);
+
+	  // Transition exiting rects to the new scale and fade to parent color.
+	  this.exitTransition.select("rect")
+	      .attr("width", wid)
+	      .style("fill", this.color("true"));
+
+	  // Remove exiting nodes when the last child has finished transitioning.
+	  this.exit.transition()
+	      .duration(this.end)
+	      .remove();
+
+	  // Rebind the current parent to the background.
+	  this.svg.select(".background")
+	      .datum(d.parent)
+	    .transition()
+	      .duration(this.end);
+	}
+
+
+
+
+
+
+
+
 	// Creates a set of bars for the given data node, at the specified index.
-	bar(d) {
+	public bar = (d) => {
 	  this.b = this.svg.insert("g", ".y.axis")
 	      .attr("class", "enter")
 	      .attr("transform", "translate(0,5)")
@@ -215,7 +314,7 @@ export class VisTableComponent implements OnInit {
 	}
 
 	// A stateful closure for stacking bars horizontally.
-	stack(i) {
+	public stack = (i) => {
 	  this.x0 = 0;
 
 	  var tra;

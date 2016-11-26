@@ -47,13 +47,189 @@ var VisTableComponent = (function () {
             _this.x.domain([0, root.value]).nice();
             _this.down(root, 0);
         };
+        this.down = function (d, i) {
+            if (!d.children)
+                return;
+            _this.end = _this.duration + d.children.length * _this.delay;
+            // Mark any currently-displayed bars as exiting.
+            _this.exit = _this.svg.selectAll(".enter")
+                .attr("class", "exit");
+            var f;
+            f = function (p) {
+                return p === d;
+            };
+            // Entering nodes immediately obscure the clicked-on bar, so hide it.
+            _this.exit.selectAll("rect").filter(f).style("fill-opacity", 1e-6);
+            // Enter the new bars for the clicked-on data.
+            // Per above, entering bars are immediately visible.
+            _this.enter = _this.bar(d)
+                .attr("transform", _this.stack(i))
+                .style("opacity", 1);
+            // Have the text fade-in, even though the bars are visible.
+            // Color the bars as parents; they will fade to children if appropriate.
+            _this.enter.select("text").style("fill-opacity", 1e-6);
+            _this.enter.select("rect").style("fill", _this.color("true"));
+            var max;
+            max = function (d) { return d.value; };
+            // Update the x-scale domain.
+            _this.x.domain([0, D3.max(d.children, max)]).nice();
+            // Update the x-axis.
+            _this.svg.selectAll(".x.axis").transition()
+                .duration(_this.duration)
+                .call(_this.xAxis);
+            var trans;
+            var del;
+            del = function (d, i) { return i * _this.delay; };
+            trans = function (d, i) { return "translate(0," + _this.barHeight * i * 1.2 + ")"; };
+            // Transition entering bars to their new position.
+            _this.enterTransition = _this.enter.transition()
+                .duration(_this.duration)
+                .delay(del)
+                .attr("transform", trans);
+            // Transition entering text.
+            _this.enterTransition.select("text")
+                .style("fill-opacity", 1);
+            var wid;
+            var fi;
+            wid = function (d) { return _this.x(d.value); };
+            fi = function (d) { return _this.color(d.children); };
+            // Transition entering rects to the new x-scale.
+            _this.enterTransition.select("rect")
+                .attr("width", wid)
+                .style("fill", fi);
+            // Transition exiting bars to fade out.
+            _this.exitTransition = _this.exit.transition()
+                .duration(_this.duration)
+                .style("opacity", 1e-6)
+                .remove();
+            var ex;
+            ex = function (d) { return _this.x(d.value); };
+            // Transition exiting bars to the new x-scale.
+            _this.exitTransition.selectAll("rect")
+                .attr("width", ex);
+            // Rebind the current node to the background.
+            _this.svg.select(".background")
+                .datum(d)
+                .transition()
+                .duration(_this.end);
+            d.index = i;
+        };
+        this.up = function (d) {
+            if (!d.parent)
+                return;
+            _this.end = _this.duration + d.children.length * _this.delay;
+            // Mark any currently-displayed bars as exiting.
+            _this.exit = _this.svg.selectAll(".enter")
+                .attr("class", "exit");
+            var tra;
+            tra = function (d, i) { return "translate(0," + _this.barHeight * i * 1.2 + ")"; };
+            // Enter the new bars for the clicked-on data's parent.
+            _this.enter = _this.bar(d.parent)
+                .attr("transform", tra)
+                .style("opacity", 1e-6);
+            var fi;
+            var filt;
+            fi = function (d) { return _this.color(d.children); };
+            filt = function (p) { return p === d; };
+            // Color the bars as appropriate.
+            // Exiting nodes will obscure the parent bar, so hide it.
+            _this.enter.select("rect")
+                .style("fill", fi)
+                .filter(filt)
+                .style("fill-opacity", 1e-6);
+            var ma;
+            ma = function (d) { return d.value; };
+            // Update the x-scale domain.
+            _this.x.domain([0, D3.max(d.parent.children, ma)]).nice();
+            // Update the x-axis.
+            _this.svg.selectAll(".x.axis").transition()
+                .duration(_this.duration)
+                .call(_this.xAxis);
+            // Transition entering bars to fade in over the full duration.
+            _this.enterTransition = _this.enter.transition()
+                .duration(_this.end)
+                .style("opacity", 1);
+            var wid;
+            var en;
+            wid = function (d) { return _this.x(d.value); };
+            en = function (p) { if (p === d)
+                D3.select("svg").style("fill-opacity", null); };
+            // Transition entering rects to the new x-scale.
+            // When the entering parent rect is done, make it visible!
+            _this.enterTransition.select("rect")
+                .attr("width", wid)
+                .each("end", en);
+            var del;
+            del = function (d, i) { return i * _this.delay; };
+            // Transition exiting bars to the parent's position.
+            _this.exitTransition = _this.exit.selectAll("g").transition()
+                .duration(_this.duration)
+                .delay(del)
+                .attr("transform", _this.stack(d.index));
+            // Transition exiting text to fade out.
+            _this.exitTransition.select("text")
+                .style("fill-opacity", 1e-6);
+            // Transition exiting rects to the new scale and fade to parent color.
+            _this.exitTransition.select("rect")
+                .attr("width", wid)
+                .style("fill", _this.color("true"));
+            // Remove exiting nodes when the last child has finished transitioning.
+            _this.exit.transition()
+                .duration(_this.end)
+                .remove();
+            // Rebind the current parent to the background.
+            _this.svg.select(".background")
+                .datum(d.parent)
+                .transition()
+                .duration(_this.end);
+        };
+        // Creates a set of bars for the given data node, at the specified index.
+        this.bar = function (d) {
+            _this.b = _this.svg.insert("g", ".y.axis")
+                .attr("class", "enter")
+                .attr("transform", "translate(0,5)")
+                .selectAll("g")
+                .data(d.children)
+                .enter().append("g")
+                .style("cursor", function (d) {
+                if (d.children != null) {
+                    return null;
+                }
+                return "pointer";
+            })
+                .on("click", _this.down);
+            _this.b.append("text")
+                .attr("x", -6)
+                .attr("y", _this.barHeight / 2)
+                .attr("dy", ".35em")
+                .style("text-anchor", "end")
+                .text(function (d) { return d.name; });
+            var re;
+            re = function (d) { return _this.x(d.value); };
+            _this.b.append("rect")
+                .attr("width", re)
+                .attr("height", _this.barHeight);
+            return _this.b;
+        };
+        // A stateful closure for stacking bars horizontally.
+        this.stack = function (i) {
+            _this.x0 = 0;
+            var tra;
+            tra = function (d) {
+                _this.tx = "translate(" + _this.x0 + "," + _this.barHeight * i * 1.2 + ")";
+                _this.x0 += _this.x(d.value);
+                return _this.tx;
+            };
+            return tra;
+        };
     }
     VisTableComponent.prototype.ngOnInit = function () {
         //this.getVis();
         this.svg.append("rect")
             .attr("class", "background")
             .attr("width", this.width)
-            .attr("height", this.height);
+            .attr("height", this.height)
+            .on("click", this.up);
         this.svg.append("g")
             .attr("class", "x-axis");
         this.svg.append("g")
@@ -63,115 +239,6 @@ var VisTableComponent = (function () {
         D3.json("/static/readme.json", this.updateJson);
         this.loading = false;
         //this.partition.nodes(this.data.value.children[0]);
-    };
-    VisTableComponent.prototype.down = function (d, i) {
-        var _this = this;
-        if (!d.children || !this.svg)
-            return;
-        this.end = this.duration + d.children.length * this.delay;
-        // Mark any currently-displayed bars as exiting.
-        this.exit = this.svg.selectAll(".enter")
-            .attr("class", "exit");
-        var f;
-        f = function (p) {
-            return p === d;
-        };
-        // Entering nodes immediately obscure the clicked-on bar, so hide it.
-        this.exit.selectAll("rect").filter(f).style("fill-opacity", 1e-6);
-        // Enter the new bars for the clicked-on data.
-        // Per above, entering bars are immediately visible.
-        this.enter = this.bar(d)
-            .attr("transform", this.stack(i))
-            .style("opacity", 1);
-        // Have the text fade-in, even though the bars are visible.
-        // Color the bars as parents; they will fade to children if appropriate.
-        this.enter.select("text").style("fill-opacity", 1e-6);
-        this.enter.select("rect").style("fill", this.color("true"));
-        var max;
-        max = function (d) { return d.value; };
-        // Update the x-scale domain.
-        this.x.domain([0, D3.max(d.children, max)]).nice();
-        // Update the x-axis.
-        this.svg.selectAll(".x.axis").transition()
-            .duration(this.duration)
-            .call(this.xAxis);
-        var trans;
-        var del;
-        del = function (d, i) { return i * _this.delay; };
-        trans = function (d, i) { return "translate(0," + _this.barHeight * i * 1.2 + ")"; };
-        // Transition entering bars to their new position.
-        this.enterTransition = this.enter.transition()
-            .duration(this.duration)
-            .delay(del)
-            .attr("transform", trans);
-        // Transition entering text.
-        this.enterTransition.select("text")
-            .style("fill-opacity", 1);
-        var wid;
-        var fi;
-        wid = function (d) { return _this.x(d.value); };
-        fi = function (d) { return _this.color(d.children); };
-        // Transition entering rects to the new x-scale.
-        this.enterTransition.select("rect")
-            .attr("width", wid)
-            .style("fill", fi);
-        // Transition exiting bars to fade out.
-        this.exitTransition = this.exit.transition()
-            .duration(this.duration)
-            .style("opacity", 1e-6)
-            .remove();
-        var ex;
-        ex = function (d) { return _this.x(d.value); };
-        // Transition exiting bars to the new x-scale.
-        this.exitTransition.selectAll("rect")
-            .attr("width", ex);
-        // Rebind the current node to the background.
-        this.svg.select(".background")
-            .datum(d)
-            .transition()
-            .duration(this.end);
-        d.index = i;
-    };
-    // Creates a set of bars for the given data node, at the specified index.
-    VisTableComponent.prototype.bar = function (d) {
-        var _this = this;
-        this.b = this.svg.insert("g", ".y.axis")
-            .attr("class", "enter")
-            .attr("transform", "translate(0,5)")
-            .selectAll("g")
-            .data(d.children)
-            .enter().append("g")
-            .style("cursor", function (d) {
-            if (d.children != null) {
-                return null;
-            }
-            return "pointer";
-        })
-            .on("click", this.down);
-        this.b.append("text")
-            .attr("x", -6)
-            .attr("y", this.barHeight / 2)
-            .attr("dy", ".35em")
-            .style("text-anchor", "end")
-            .text(function (d) { return d.name; });
-        var re;
-        re = function (d) { return _this.x(d.value); };
-        this.b.append("rect")
-            .attr("width", re)
-            .attr("height", this.barHeight);
-        return this.b;
-    };
-    // A stateful closure for stacking bars horizontally.
-    VisTableComponent.prototype.stack = function (i) {
-        var _this = this;
-        this.x0 = 0;
-        var tra;
-        tra = function (d) {
-            _this.tx = "translate(" + _this.x0 + "," + _this.barHeight * i * 1.2 + ")";
-            _this.x0 += _this.x(d.value);
-            return _this.tx;
-        };
-        return tra;
     };
     VisTableComponent.prototype.getVis = function () {
         var _this = this;
