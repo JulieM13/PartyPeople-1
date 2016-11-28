@@ -24,8 +24,7 @@ var VisTableComponent = (function () {
         this.x = D3.scale.linear()
             .range([0, this.width]);
         this.barHeight = 20;
-        this.color = D3.scale.ordinal()
-            .range(["steelblue", "#ccc"]);
+        this.color = D3.scale.ordinal().range(["steelblue", "#ccc"]);
         this.duration = 750;
         this.delay = 25;
         this.partition = D3.layout.partition()
@@ -68,7 +67,7 @@ var VisTableComponent = (function () {
             // Have the text fade-in, even though the bars are visible.
             // Color the bars as parents; they will fade to children if appropriate.
             _this.enter.select("text").style("fill-opacity", 1e-6);
-            _this.enter.select("rect").style("fill", _this.color("true"));
+            _this.enter.select("rect").style("fill", _this.color("#ccc"));
             var max;
             max = function (d) { return d.value; };
             // Update the x-scale domain.
@@ -92,7 +91,13 @@ var VisTableComponent = (function () {
             var wid;
             var fi;
             wid = function (d) { return _this.x(d.value); };
-            fi = function (d) { return _this.color(d.children); };
+            fi = function (d) {
+                var exists = "steelblue";
+                if (d.children) {
+                    exists = "#ccc";
+                }
+                return _this.color(exists);
+            };
             // Transition entering rects to the new x-scale.
             _this.enterTransition.select("rect")
                 .attr("width", wid)
@@ -129,14 +134,20 @@ var VisTableComponent = (function () {
                 .style("opacity", 1e-6);
             var fi;
             var filt;
-            fi = function (d) { return _this.color(d.children); };
+            fi = function (d) {
+                var exists = "steelblue";
+                if (d.children) {
+                    exists = "#ccc";
+                }
+                return _this.color(exists);
+            };
             filt = function (p) { return p === d; };
             // Color the bars as appropriate.
             // Exiting nodes will obscure the parent bar, so hide it.
             _this.enter.select("rect")
                 .style("fill", fi)
                 .filter(filt)
-                .style("fill-opacity", 1e-6);
+                .style("fill-opacity", 1);
             var ma;
             ma = function (d) { return d.value; };
             // Update the x-scale domain.
@@ -172,7 +183,7 @@ var VisTableComponent = (function () {
             // Transition exiting rects to the new scale and fade to parent color.
             _this.exitTransition.select("rect")
                 .attr("width", wid)
-                .style("fill", _this.color("true"));
+                .style("fill", _this.color("#ccc"));
             // Remove exiting nodes when the last child has finished transitioning.
             _this.exit.transition()
                 .duration(_this.end)
@@ -192,7 +203,7 @@ var VisTableComponent = (function () {
                 .data(d.children)
                 .enter().append("g")
                 .style("cursor", function (d) {
-                if (d.children != null) {
+                if (d.children == null) {
                     return null;
                 }
                 return "pointer";

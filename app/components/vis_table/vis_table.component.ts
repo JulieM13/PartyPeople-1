@@ -24,8 +24,7 @@ export class VisTableComponent implements OnInit {
     private x = D3.scale.linear()
     	.range([0, this.width]);
 	private barHeight = 20;
-	private color = D3.scale.ordinal()
-		.range(["steelblue", "#ccc"]);
+	private color = D3.scale.ordinal().range(["steelblue", "#ccc"]);
 	private duration = 750;
 	private delay = 25;
 	private partition = D3.layout.partition()
@@ -113,7 +112,7 @@ export class VisTableComponent implements OnInit {
 		// Have the text fade-in, even though the bars are visible.
 		// Color the bars as parents; they will fade to children if appropriate.
 		this.enter.select("text").style("fill-opacity", 1e-6);
-		this.enter.select("rect").style("fill", this.color("true"));
+		this.enter.select("rect").style("fill", this.color("#ccc"));
 
 		var max;
 
@@ -147,7 +146,13 @@ export class VisTableComponent implements OnInit {
 		var fi;
 
 		wid = (d: any) => { return this.x(d.value); }
-		fi = (d: any) => { return this.color(d.children); }
+		fi = (d: any) => { 
+			var exists = "steelblue";
+			if (d.children){
+				exists = "#ccc";
+			}
+			return this.color(exists); 
+		}
 
 		// Transition entering rects to the new x-scale.
 		this.enterTransition.select("rect")
@@ -203,7 +208,13 @@ export class VisTableComponent implements OnInit {
 	  var fi;
 	  var filt;
 
-	  fi = (d) => { return this.color(d.children); }
+	  fi = (d) => { 
+	  	var exists = "steelblue";
+			if (d.children){
+				exists = "#ccc";
+			}
+			return this.color(exists);  
+	  }
 	  filt = (p) => { return p === d; }
 
 	  // Color the bars as appropriate.
@@ -211,7 +222,7 @@ export class VisTableComponent implements OnInit {
 	  this.enter.select("rect")
 	      .style("fill", fi)
 	    .filter(filt)
-	      .style("fill-opacity", 1e-6);
+	      .style("fill-opacity", 1);
 
 	  var ma;
 	  ma = (d) => { return d.value; }
@@ -258,7 +269,7 @@ export class VisTableComponent implements OnInit {
 	  // Transition exiting rects to the new scale and fade to parent color.
 	  this.exitTransition.select("rect")
 	      .attr("width", wid)
-	      .style("fill", this.color("true"));
+	      .style("fill", this.color("#ccc"));
 
 	  // Remove exiting nodes when the last child has finished transitioning.
 	  this.exit.transition()
@@ -288,7 +299,7 @@ export class VisTableComponent implements OnInit {
 	      .data(d.children)
 	    .enter().append("g")
 	      .style("cursor", function(d: any) { 
-	      	if(d.children != null) {
+	      	if(d.children == null) {
 	      		return null;
 	      	}
 	      	return "pointer";
