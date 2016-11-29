@@ -209,12 +209,32 @@ var VisTableComponent = (function () {
                 return "pointer";
             })
                 .on("click", _this.down);
+            var popup = D3.select("#bar_graph").append("popup")
+                .style("padding-left", "50px")
+                .style("display", "none")
+                .style("position", "absolute")
+                .text("text");
+            var mouseOver = function (d) {
+                popup.style("display", "block");
+                popup.text(d.name);
+            };
+            var mouseOut = function (d) {
+                popup.style("display", "none");
+                console.log("out");
+            };
             _this.b.append("text")
                 .attr("x", -6)
                 .attr("y", _this.barHeight / 2)
                 .attr("dy", ".35em")
                 .style("text-anchor", "end")
-                .text(function (d) { return d.name; });
+                .text(function (d) {
+                if (d.name.length > 15) {
+                    return d.name.substring(0, 12) + "...";
+                }
+                return d.name;
+            })
+                .on("mouseover", mouseOver)
+                .on("mouseout", mouseOut);
             var re;
             re = function (d) { return _this.x(d.value); };
             _this.b.append("rect")

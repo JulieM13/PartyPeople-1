@@ -288,10 +288,6 @@ export class VisTableComponent implements OnInit {
 
 
 
-
-
-
-
 	// Creates a set of bars for the given data node, at the specified index.
 	public bar = (d) => {
 	  this.b = this.svg.insert("g", ".y.axis")
@@ -308,12 +304,35 @@ export class VisTableComponent implements OnInit {
 	      })
 	      .on("click", this.down);
 
+	  var popup = D3.select("#bar_graph").append("popup")
+	  	.style("padding-left", "50px")
+	  	.style("display", "none")
+	  	.style("position", "absolute")
+	  	.text("text");
+
+	  var mouseOver = (d: any) => {
+		popup.style("display", "block");
+		popup.text(d.name);
+	  }
+
+	  var mouseOut = (d: any) => {
+		popup.style("display", "none");
+		console.log("out");
+	  }
+
 	  this.b.append("text")
 	      .attr("x", -6)
 	      .attr("y", this.barHeight / 2)
 	      .attr("dy", ".35em")
 	      .style("text-anchor", "end")
-	      .text(function(d: any) { return d.name; });
+	      .text(function(d: any) { 
+	      	if (d.name.length > 15){
+	      		return d.name.substring(0,12) + "...";
+	      	}
+	      	return d.name; 
+	      })
+	      .on("mouseover", mouseOver)
+	      .on("mouseout", mouseOut);
 
 	  var re;
 
