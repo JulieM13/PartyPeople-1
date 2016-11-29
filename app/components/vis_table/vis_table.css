@@ -1,5 +1,7 @@
 svg {
   font-size: 14px;
+  display: block;
+  margin: auto;
 }
 
 rect.background {

@@ -19,8 +19,8 @@ var VisTableComponent = (function () {
         this.loading = true;
         // D3 vars
         this.margin = { top: 30, right: 120, bottom: 0, left: 120 };
-        this.width = 960 - this.margin.left - this.margin.right;
-        this.height = 500 - this.margin.top - this.margin.bottom;
+        this.width = 1280 - this.margin.left - this.margin.right;
+        this.height = 700 - this.margin.top - this.margin.bottom;
         this.x = D3.scale.linear()
             .range([0, this.width]);
         this.barHeight = 20;
@@ -247,7 +247,7 @@ var VisTableComponent = (function () {
             .attr("class", "y-axis")
             .append("line")
             .attr("y1", "100%");
-        D3.json("/static/readme.json", this.updateJson);
+        D3.json("/static/schools.json", this.updateJson);
         this.loading = false;
         //this.partition.nodes(this.data.value.children[0]);
     };
@@ -266,7 +266,9 @@ var VisTableComponent = (function () {
             templateUrl: 'app/components/vis_table/vis_table.html',
             providers: [
                 allServices_service_1.AllServicesService
-            ]
+            ],
+            styleUrls: ['app/components/vis_table/vis_table.css'],
+            encapsulation: core_1.ViewEncapsulation.None
         }), 
         __metadata('design:paramtypes', [allServices_service_1.AllServicesService])
     ], VisTableComponent);

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { AllServicesService } from '../../services/allServices.service';
 import * as D3 from 'd3';
 
@@ -7,7 +7,9 @@ import * as D3 from 'd3';
     templateUrl: 'app/components/vis_table/vis_table.html',
     providers: [
     	AllServicesService
-    ]
+    ],
+    styleUrls: ['app/components/vis_table/vis_table.css'],
+    encapsulation: ViewEncapsulation.None
 })
 
 export class VisTableComponent implements OnInit {
@@ -18,8 +20,8 @@ export class VisTableComponent implements OnInit {
 
 	// D3 vars
 	private margin = {top: 30, right: 120, bottom: 0, left: 120};
-    private width = 960 - this.margin.left - this.margin.right;
-    private height = 500 - this.margin.top - this.margin.bottom;
+    private width = 1280 - this.margin.left - this.margin.right;
+    private height = 700 - this.margin.top - this.margin.bottom;
 
     private x = D3.scale.linear()
     	.range([0, this.width]);
@@ -70,7 +72,7 @@ export class VisTableComponent implements OnInit {
 		    .attr("y1", "100%");
 
 
-		D3.json("/static/readme.json", this.updateJson);
+		D3.json("/static/schools.json", this.updateJson);
 		this.loading = false;
 		//this.partition.nodes(this.data.value.children[0]);
 	}
